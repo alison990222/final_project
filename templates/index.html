@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+    <meta charset="utf-8">
+    <title>home page</title>
+</head>
+<body>
+
+<h1 class="logo"><a href="{% url 'index' %}">home page</a></h1>
+{% if user.is_authenticated %}
+    <p>welcome<a href="#">{{ user.username }}</a></p>
+    <button class="btn btn-default"><a href="{% url 'logout' %}?next={{ request.path }}">logout</a>
+    </button>
+{% else %}
+    <p>you haven't logged in
+        <button class="btn btn-default"><a href="{% url 'login' %}?next={{ request.path }}">login</a>
+        </button>
+        <button class="btn btn-default"><a href="{% url 'users:register' %}?next={{ request.path }}">register</a>
+        </button>
+    </p>
+{% endif %}
+
+</body>
+</html>
