@@ -1,6 +1,12 @@
 from django.shortcuts import render, redirect
 
 from .forms import RegisterForm
+from users import models
+from django.shortcuts import render, redirect
+from .forms import PicForm  # 上传图片的图表
+from .models import Pic  # 保存上传图片相关信息的模型
+
+import time
 
 
 def register(request):
@@ -33,4 +39,29 @@ def register(request):
 
 
 def index(request):
-    return render(request, 'index.html')
+    context = {}
+    form = PicForm
+    context['form'] = form
+    return render(request, 'index.html', context)
+
+
+def save_pic(request):
+    if request.method == "POST":
+        form = PicForm(request.POST, request.FILES)
+
+        if form.is_valid():
+            picture = form.cleaned_data["picture"]
+            current_user = request.user
+            username = current_user.username
+
+            time_now = int(time.time())
+            time_local = time.localtime(time_now)
+            timestamp = time.strftime("%Y-%m-%d %H:%M:%S", time_local)
+
+            pic_content = models.Pic.objects.create(timestamp=timestamp, username= username, picture=picture)
+
+        else:
+            form = PicForm()
+
+        return render(request, 'index.html')
+

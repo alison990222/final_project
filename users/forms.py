@@ -1,5 +1,5 @@
 from django.contrib.auth.forms import UserCreationForm
-
+from django import forms
 from .models import User
 
 #dejango 內置的用戶註冊表單
@@ -14,3 +14,7 @@ class RegisterForm(UserCreationForm):
     class Meta(UserCreationForm.Meta):
         model = User #users.User
         fields = ("username", )
+
+
+class PicForm(forms.Form):
+    picture = forms.ImageField(label='pic:')
