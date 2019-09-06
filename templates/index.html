@@ -11,6 +11,17 @@
     <p>welcome<a href="#">{{ user.username }}</a></p>
     <button class="btn btn-default"><a href="{% url 'logout' %}?next={{ request.path }}">logout</a>
     </button>
+    {# uploading pics #}
+    <form enctype="multipart/form-data" action="{% url "save_pic" %}" method="POST">
+    {% csrf_token %}
+    {% for field in form %}
+        {{ field.label }}
+        {{ field }}
+    {% endfor %}
+    <br><br>
+    <button type="submit">upload</button>
+    </form>
+
 {% else %}
     <p>you haven't logged in
         <button class="btn btn-default"><a href="{% url 'login' %}?next={{ request.path }}">login</a>
