@@ -11,10 +11,10 @@ from .models import User
 
 #繼承上面的 改成自己定義的User類
 class RegisterForm(UserCreationForm):
-    class Meta(UserCreationForm.Meta):
-        model = User #users.User
-        fields = ("username", )
+	class Meta(UserCreationForm.Meta):
+		model = User #users.User
+		fields = ("username", )
 
 
 class PicForm(forms.Form):
-    picture = forms.ImageField(label='pic:')
+	picture = forms.ImageField(label='pic:')
