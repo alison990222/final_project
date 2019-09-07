@@ -3,3 +3,5 @@
 .idea/
 .DE_Store
 .idea/workspace.xml
+*.pyc
+*.pyc
