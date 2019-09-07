@@ -17,4 +17,5 @@ class RegisterForm(UserCreationForm):
 
 
 class PicForm(forms.Form):
-	picture = forms.ImageField(label='pic:')
+	picture = forms.ImageField(label='pic:', required=False)
+	url = forms.URLField(label='url: ', required=False)
