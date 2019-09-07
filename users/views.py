@@ -1,3 +1,5 @@
+from urllib.request import urlretrieve
+
 from django.shortcuts import render, redirect
 
 from .forms import RegisterForm
@@ -53,13 +55,23 @@ def save_pic(request):
 		form = PicForm(request.POST, request.FILES)
 
 		if form.is_valid():
-			picture = form.cleaned_data["picture"]
+			pic = form.cleaned_data["picture"]
+			url = form.cleaned_data["url"]
+
 			current_user = request.user
 			username = current_user.username
 
 			time_now = int(time.time())
 			time_local = time.localtime(time_now)
 			timestamp = time.strftime("%Y-%m-%d %H:%M:%S", time_local)
+
+			if pic:
+				picture = pic
+			elif url:
+				path = "./media/pictures/"
+				pic_name = str(timestamp)+".JPG"
+				urlretrieve(url, path+pic_name)
+				picture = path+pic_name
 
 			pic_content = models.Pic.objects.create(timestamp=timestamp, username=username, picture=picture)
 
