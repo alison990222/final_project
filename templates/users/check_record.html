@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>check records</title>
+</head>
+<body>
+    <button class="btn btn-default"><a href="{% url 'index' %}">back to main page</a></button>
+    <h2>Current Page: <a id="page"></a></h2>
+    <button class="btn btn-default" onclick="fetch()">点击显示信息</button>
+    <p id="main_table"></p>
+
+    <!-- todo: 实现页面切换功能，每一页显示一定条目，不同页面间数据用ajax切换 -->
+    <!-- todo: 检查用户发送的cookie，是否为登陆的同一用户 -->
+<script>
+    let page = 1;
+    document.getElementById('page').textContent = page;
+
+    function fetch() {
+        let xmlHttp = new XMLHttpRequest();
+        xmlHttp.onreadystatechange = function () {
+            if (this.readyState === 4 && this.status === 200) {
+                document.getElementById('main_table').innerHTML = xmlHttp.responseText;
+                // getInfo(this);
+            }
+        };
+        xmlHttp.open("GET", `check_records/${page}`, true);
+        xmlHttp.send();
+    }
+    
+    function getInfo(xml) {
+        const xmlDoc = xml.responseXML;
+        let table="<tr><th>Artist</th><th>Title</th></tr>";
+        const x = xmlDoc.getElementsByTagName("CD");
+        for (let i = 0; i < x.length; i++) {
+            table += "<tr><td>" +
+            x[i].getElementsByTagName("ARTIST")[0].childNodes[0].nodeValue +
+            "</td><td>" +
+            x[i].getElementsByTagName("TITLE")[0].childNodes[0].nodeValue +
+            "</td></tr>";
+        }
+        document.getElementById("demo").innerHTML = table;
+    }
+</script>
+
+</body>
+</html>

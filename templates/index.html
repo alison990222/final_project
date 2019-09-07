@@ -16,11 +16,13 @@
     {% csrf_token %}
     {% for field in form %}
         {{ field.label }}
-        {{ field }}
+         {{ field }}
     {% endfor %}
     <br><br>
     <button type="submit">upload</button>
     </form>
+
+    <button class="btn btn-default"><a href="{% url 'showRecords' %}">check records</a></button>
 
 {% else %}
     <p>you haven't logged in

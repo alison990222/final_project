@@ -8,6 +8,7 @@ from .models import Pic  # 保存上传图片相关信息的模型
 from final_project.settings import MEDIA_ROOT
 
 import django.http
+import json
 import time
 import os
 
@@ -81,3 +82,27 @@ def show_pic(request, pic_id):
 	except Exception as e:
 		print(e)
 		return django.http.HttpResponse(str(e))
+
+
+# 使用AJAX动态返回表单
+# todo: 检查此时的user和登陆的是否为同一个user
+def check_records(request, page):
+	table = []
+	user = request.user
+	test_name = 'alison'
+	for record in Pic.objects.all():
+		if record.username == test_name:
+			table.append({
+				'user': test_name,
+				'record id': record.id,
+				'input picture': str(record.picture),
+				'output picture': str(record.res),
+				'upload time': record.timestamp
+			})
+
+	return django.http.JsonResponse(table, safe=False)
+
+
+# 调用check_record模版网页
+def show_records(request):
+	return render(request, 'users/check_record.html')
