@@ -56,47 +56,6 @@ def index(request):
 	context['form'] = form
 	return render(request, 'index.html', context)
 
-
-# empty file and url will make it buggy
-def save_pic(request):
-	if request.method == "POST":
-		form = PicForm(request.POST, request.FILES)
-
-		if form.is_valid():
-			pic = form.cleaned_data["picture"]
-			url = form.cleaned_data["url"]
-
-			current_user = request.user
-			username = current_user.username
-
-			time_now = int(time.time())
-			time_local = time.localtime(time_now)
-			timestamp = time.strftime("%Y-%m-%d %H:%M:%S", time_local)
-			context = {}
-			form = PicForm
-			context['form'] = form
-
-			if pic:
-				picture = pic
-
-			elif url:
-				path = "./media/pictures/"
-				pic_name = str(timestamp) + ".jpg"
-				urlretrieve(url, path + pic_name)
-				picture = path + pic_name
-			# input should be limited to .jpg(hopefully)
-			#res = func(picture)
-			pic_content = models.Pic.objects.create(timestamp=timestamp, username=username, picture=picture)#, res=res)
-				#pic_name = str(timestamp) + ".JPG"
-				#urlretrieve(url, path + pic_name)
-				#picture = path + pic_name
-	else:
-		context = {}
-		form = PicForm
-		context['form'] = form
-	return render(request, 'index.html', context)
-
-
 class UserFormLogin(object):
 	pass
 
@@ -214,5 +173,39 @@ def search(request, page):
 	              {'records': records, 'searched': True, 'start_date': start_date_str, 'end_date': end_date_str})
 
 
+# empty file and url will make it buggy
 def upload_and_view(request):
-	return render(request, 'users/upload_and_view.html')
+	if request.method == "POST":
+		form = PicForm(request.POST, request.FILES)
+
+		if form.is_valid():
+			pic = form.cleaned_data["picture"]
+			url = form.cleaned_data["url"]
+
+			current_user = request.user
+			username = current_user.username
+
+			time_now = int(time.time())
+			time_local = time.localtime(time_now)
+			timestamp = time.strftime("%Y-%m-%d %H:%M:%S", time_local)
+			context = {}
+			form = PicForm
+			context['form'] = form
+
+			if pic:
+				picture = pic
+
+			elif url:
+				path = "./media/pictures/"
+				pic_name = str(timestamp) + ".jpg"
+				urlretrieve(url, path + pic_name)
+				picture = path + pic_name
+			# input should be limited to .jpg(hopefully)
+			#res = func(picture)
+			pic_content = models.Pic.objects.create(timestamp=timestamp, username=username, picture=picture)#, res=res)
+
+	else:
+		context = {}
+		form = PicForm
+		context['form'] = form
+	return render(request, 'users/upload_and_view.html', context)
