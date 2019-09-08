@@ -8,6 +8,7 @@ from django.shortcuts import render, redirect
 from .forms import PicForm  # 上传图片的图表
 from .models import Pic  # 保存上传图片相关信息的模型
 from final_project.settings import MEDIA_ROOT
+from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage, InvalidPage
 
 import django.http
 import json
@@ -70,9 +71,9 @@ def save_pic(request):
 				picture = pic
 			elif url:
 				path = "./media/pictures/"
-				pic_name = str(timestamp)+".JPG"
-				urlretrieve(url, path+pic_name)
-				picture = path+pic_name
+				pic_name = str(timestamp) + ".JPG"
+				urlretrieve(url, path + pic_name)
+				picture = path + pic_name
 
 			pic_content = models.Pic.objects.create(timestamp=timestamp, username=username, picture=picture)
 
@@ -90,31 +91,43 @@ def show_pic(request, pic_id):
 		with open(pic_path, 'rb') as image:
 			image_data = image.read()
 		# 使用文件流，从服务器后台发送图片（二进制数据）到网页
-		return django.http.HttpResponse(image_data, content_type='image/png')   # 暂定都是png格式文件
+		return django.http.HttpResponse(image_data, content_type='image/png')  # 暂定都是png格式文件
 	except Exception as e:
 		print(e)
 		return django.http.HttpResponse(str(e))
 
 
 # 使用AJAX动态返回表单
-# todo: 检查此时的user和登陆的是否为同一个user
+# todo：执行前检查用户身份，用request.session
 def check_records(request, page):
-	table = []
+	record_list = []
 	user = request.user
-	test_name = 'alison'
 	for record in Pic.objects.all():
-		if record.username == test_name:
-			table.append({
-				'user': test_name,
+		if record.username == user.username:
+			record_list.append({
+				'user': record.username,
 				'record id': record.id,
 				'input picture': str(record.picture),
 				'output picture': str(record.res),
 				'upload time': record.timestamp
 			})
 
-	return django.http.JsonResponse(table, safe=False)
+	# 规定每页10条数据，进行分割
+	paginator = Paginator(record_list, 10)
 
+	if request.method == 'GET':
+		try:
+			records = paginator.page(page)
+		except PageNotAnInteger:
+			# 如果请求的页数不是整数，返回第一页
+			records = paginator.page(1)
+		except EmptyPage:
+			# 如果页数不在合法范围内，返回结果最后一页
+			records = paginator.page(paginator.num_pages)
+		except InvalidPage:
+			# 如果请求的页数不存在，重定向页面
+			return django.http.HttpResponse('找不到页面内容')
 
-# 调用check_record模版网页
-def show_records(request):
-	return render(request, 'users/check_record.html')
+		template_view = 'users/check_record.html'
+		return render(request, template_view, {'records': records})
+
