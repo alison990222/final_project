@@ -9,6 +9,7 @@ from .forms import PicForm  # 上传图片的图表
 from .models import Pic  # 保存上传图片相关信息的模型
 from final_project.settings import MEDIA_ROOT
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage, InvalidPage
+from django.core.exceptions import ObjectDoesNotExist
 import datetime
 
 import django.http
@@ -79,9 +80,10 @@ def save_pic(request):
 			pic_content = models.Pic.objects.create(timestamp=timestamp, username=username, picture=picture)
 
 		else:
-			form = PicForm()
-
-		return render(request, 'index.html')
+			context = {}
+			form = PicForm
+			context['form'] = form
+		return render(request, 'index.html', context)
 
 
 # todo：执行前检查用户身份，用request.session
@@ -177,3 +179,13 @@ def search(request, page):
 
 def upload_and_view(request):
 	return render(request, 'users/upload_and_view.html')
+
+
+def delete(request, pic_id):
+	try:
+		# 传入False参数使得ImageField不保存文件，将其一起删除
+		Pic.objects.get(pk=pic_id).delete(False)
+		return
+
+	except ObjectDoesNotExist as e:
+		return django.http.HttpResponse(e)
