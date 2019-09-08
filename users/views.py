@@ -1,12 +1,16 @@
 from urllib.request import urlretrieve
 
-from django.shortcuts import render, redirect
+from django.contrib import auth
+from django.http import HttpResponse, HttpResponseRedirect
+from django.shortcuts import render, redirect, render_to_response
+from django.template import RequestContext
 
-from .forms import RegisterForm
+
+from .forms import RegisterForm, UserForm
 from users import models
 from django.shortcuts import render, redirect
 from .forms import PicForm  # 上传图片的图表
-from .models import Pic  # 保存上传图片相关信息的模型
+from .models import Pic, User  # 保存上传图片相关信息的模型
 from final_project.settings import MEDIA_ROOT
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage, InvalidPage
 import datetime
@@ -53,6 +57,7 @@ def index(request):
 	return render(request, 'index.html', context)
 
 
+# empty file and url will make it buggy
 def save_pic(request):
 	if request.method == "POST":
 		form = PicForm(request.POST, request.FILES)
@@ -67,21 +72,55 @@ def save_pic(request):
 			time_now = int(time.time())
 			time_local = time.localtime(time_now)
 			timestamp = time.strftime("%Y-%m-%d %H:%M:%S", time_local)
+			context = {}
+			form = PicForm
+			context['form'] = form
 
 			if pic:
 				picture = pic
+
 			elif url:
 				path = "./media/pictures/"
-				pic_name = str(timestamp) + ".JPG"
+				pic_name = str(timestamp) + ".jpg"
 				urlretrieve(url, path + pic_name)
 				picture = path + pic_name
+			# input should be limited to .jpg(hopefully)
+			#res = func(picture)
+			pic_content = models.Pic.objects.create(timestamp=timestamp, username=username, picture=picture)#, res=res)
+				#pic_name = str(timestamp) + ".JPG"
+				#urlretrieve(url, path + pic_name)
+				#picture = path + pic_name
+	else:
+		context = {}
+		form = PicForm
+		context['form'] = form
+	return render(request, 'index.html', context)
 
-			pic_content = models.Pic.objects.create(timestamp=timestamp, username=username, picture=picture)
 
-		else:
-			form = PicForm()
+class UserFormLogin(object):
+	pass
 
-		return render(request, 'index.html')
+
+def login(request):
+	if request.method == 'POST':
+		userform = UserForm(request.POST)
+		if userform.is_valid():
+			# 获取表单用户密码
+			username = userform.cleaned_data['username']
+			password = userform.cleaned_data['password']
+			# 获取的表单数据与数据库进行比较
+			user = auth.authenticate(username=username, password=password)
+			request.session["user_id"] = user.id
+			if user:
+				auth.login(request, user)
+				response = HttpResponseRedirect('/')
+				response.set_cookie('username', username)
+				return response
+			else:
+				return HttpResponseRedirect('/users/login/')
+	else:
+		userform = UserForm()
+	return render(request, 'users/login.html', {'userform': userform})
 
 
 # todo：执行前检查用户身份，用request.session

@@ -17,6 +17,11 @@ class RegisterForm(UserCreationForm):
 		fields = ("username", )
 
 
+class UserForm(forms.Form):
+    username = forms.CharField(label='username',max_length=100)
+    password = forms.CharField(label='password',widget=forms.PasswordInput())
+
+
 class PicForm(forms.Form):
 	picture = forms.ImageField(label='pic:', required=False)
 	url = forms.URLField(label='url: ', required=False)
