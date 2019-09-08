@@ -17,8 +17,7 @@ from django.contrib import admin
 from django.conf.urls import url, include
 from users import views
 from django.views.static import serve
-from final_project.settings import MEDIA_ROOT
-from django.urls import path
+from final_project.settings import MEDIA_ROOT, STATIC_ROOT
 
 urlpatterns = [
 	url(r'^admin/', admin.site.urls),
@@ -26,8 +25,10 @@ urlpatterns = [
 	url(r'^users/', include('django.contrib.auth.urls')),
 	url(r'^$', views.index, name='index'),
 	url(r'^save_profile/', views.save_pic, name='save_pic'),
+	# url(r'^static/(?P<path>.*)', serve, {"document_root": STATIC_ROOT}),
 	url(r'^media/(?P<path>.*)', serve, {"document_root": MEDIA_ROOT}),
 	url(r'^show_pic/(\d+)', views.show_pic, name='image'),
-	url(r'^show_records', views.show_records, name='showRecords'),
 	url(r'^check_records/(\d+)', views.check_records, name='checkRecords'),
+	url(r'^search/(\d+)', views.search, name='search'),
+	url(r'^upload/', views.upload_and_view, name='upload')
 ]
