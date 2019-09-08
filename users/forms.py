@@ -18,8 +18,8 @@ class RegisterForm(UserCreationForm):
 
 
 class UserForm(forms.Form):
-    username = forms.CharField(label='username',max_length=100)
-    password = forms.CharField(label='password',widget=forms.PasswordInput())
+	username = forms.CharField(label='username',max_length=100)
+	password = forms.CharField(label='password',widget=forms.PasswordInput())
 
 
 class PicForm(forms.Form):

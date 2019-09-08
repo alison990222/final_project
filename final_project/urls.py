@@ -30,5 +30,6 @@ urlpatterns = [
 	url(r'^show_pic/(\d+)', views.show_pic, name='image'),
 	url(r'^check_records/(\d+)', views.check_records, name='checkRecords'),
 	url(r'^search/(\d+)', views.search, name='search'),
-	url(r'^upload/', views.upload_and_view, name='upload')
+	url(r'^upload/', views.upload_and_view, name='upload'),
+	url(r'^check_records/(\d+)', views.delete, name='delete'),
 ]

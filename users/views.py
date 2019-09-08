@@ -13,6 +13,7 @@ from .forms import PicForm  # 上传图片的图表
 from .models import Pic, User  # 保存上传图片相关信息的模型
 from final_project.settings import MEDIA_ROOT
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage, InvalidPage
+from django.core.exceptions import ObjectDoesNotExist
 import datetime
 
 import django.http
@@ -55,6 +56,47 @@ def index(request):
 	form = PicForm
 	context['form'] = form
 	return render(request, 'index.html', context)
+
+
+# empty file and url will make it buggy
+def save_pic(request):
+	if request.method == "POST":
+		form = PicForm(request.POST, request.FILES)
+
+		if form.is_valid():
+			pic = form.cleaned_data["picture"]
+			url = form.cleaned_data["url"]
+
+			current_user = request.user
+			username = current_user.username
+
+			time_now = int(time.time())
+			time_local = time.localtime(time_now)
+			timestamp = time.strftime("%Y-%m-%d %H:%M:%S", time_local)
+			context = {}
+			form = PicForm
+			context['form'] = form
+
+			if pic:
+				picture = pic
+
+			elif url:
+				path = "./media/pictures/"
+				pic_name = str(timestamp) + ".jpg"
+				urlretrieve(url, path + pic_name)
+				picture = path + pic_name
+			# input should be limited to .jpg(hopefully)
+			# res = func(picture)
+				pic_content = models.Pic.objects.create(timestamp=timestamp, username=username, picture=picture)#, res=res)
+				#pic_name = str(timestamp) + ".JPG"
+				#urlretrieve(url, path + pic_name)
+				#picture = path + pic_name
+	else:
+		context = {}
+		form = PicForm
+		context['form'] = form
+	return render(request, 'index.html', context)
+
 
 class UserFormLogin(object):
 	pass
@@ -209,3 +251,15 @@ def upload_and_view(request):
 		form = PicForm
 		context['form'] = form
 	return render(request, 'users/upload_and_view.html', context)
+
+	#return render(request, 'users/upload_and_view.html')
+
+
+def delete(request, pic_id):
+	try:
+		# 传入False参数使得ImageField不保存文件，将其一起删除
+		Pic.objects.get(pk=pic_id).delete(False)
+		return check_records(request, 1)
+
+	except ObjectDoesNotExist as e:
+		return django.http.HttpResponse(e)
