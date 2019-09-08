@@ -98,6 +98,32 @@ def save_pic(request):
 	return render(request, 'index.html', context)
 
 
+class UserFormLogin(object):
+	pass
+
+
+def login(request):
+	if request.method == 'POST':
+		userform = UserForm(request.POST)
+		if userform.is_valid():
+			# 获取表单用户密码
+			username = userform.cleaned_data['username']
+			password = userform.cleaned_data['password']
+			# 获取的表单数据与数据库进行比较
+			user = auth.authenticate(username=username, password=password)
+			request.session["user_id"] = user.id
+			if user:
+				auth.login(request, user)
+				response = HttpResponseRedirect('/')
+				response.set_cookie('username', username)
+				return response
+			else:
+				return HttpResponseRedirect('/users/login/')
+	else:
+		userform = UserForm()
+	return render(request, 'users/login.html', {'userform': userform})
+
+
 # todo：执行前检查用户身份，用request.session
 def show_pic(request, pic_id):
 	try:
