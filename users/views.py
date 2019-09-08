@@ -1,12 +1,16 @@
 from urllib.request import urlretrieve
 
-from django.shortcuts import render, redirect
+from django.contrib import auth
+from django.http import HttpResponse, HttpResponseRedirect
+from django.shortcuts import render, redirect, render_to_response
+from django.template import RequestContext
 
-from .forms import RegisterForm
+
+from .forms import RegisterForm, UserForm
 from users import models
 from django.shortcuts import render, redirect
 from .forms import PicForm  # 上传图片的图表
-from .models import Pic  # 保存上传图片相关信息的模型
+from .models import Pic, User  # 保存上传图片相关信息的模型
 from final_project.settings import MEDIA_ROOT
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage, InvalidPage
 from django.core.exceptions import ObjectDoesNotExist
@@ -54,6 +58,7 @@ def index(request):
 	return render(request, 'index.html', context)
 
 
+# empty file and url will make it buggy
 def save_pic(request):
 	if request.method == "POST":
 		form = PicForm(request.POST, request.FILES)
@@ -68,22 +73,29 @@ def save_pic(request):
 			time_now = int(time.time())
 			time_local = time.localtime(time_now)
 			timestamp = time.strftime("%Y-%m-%d %H:%M:%S", time_local)
-
-			if pic:
-				picture = pic
-			elif url:
-				path = "./media/pictures/"
-				pic_name = str(timestamp) + ".JPG"
-				urlretrieve(url, path + pic_name)
-				picture = path + pic_name
-
-			pic_content = models.Pic.objects.create(timestamp=timestamp, username=username, picture=picture)
-
-		else:
 			context = {}
 			form = PicForm
 			context['form'] = form
-		return render(request, 'index.html', context)
+
+			if pic:
+				picture = pic
+
+			elif url:
+				path = "./media/pictures/"
+				pic_name = str(timestamp) + ".jpg"
+				urlretrieve(url, path + pic_name)
+				picture = path + pic_name
+			# input should be limited to .jpg(hopefully)
+			#res = func(picture)
+			pic_content = models.Pic.objects.create(timestamp=timestamp, username=username, picture=picture)#, res=res)
+				#pic_name = str(timestamp) + ".JPG"
+				#urlretrieve(url, path + pic_name)
+				#picture = path + pic_name
+	else:
+		context = {}
+		form = PicForm
+		context['form'] = form
+	return render(request, 'index.html', context)
 
 
 # todo：执行前检查用户身份，用request.session
