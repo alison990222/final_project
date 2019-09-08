@@ -173,3 +173,7 @@ def search(request, page):
 
 	return render(request, 'users/check_record.html',
 	              {'records': records, 'searched': True, 'start_date': start_date_str, 'end_date': end_date_str})
+
+
+def upload_and_view(request):
+	return render(request, 'users/upload_and_view.html')

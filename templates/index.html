@@ -27,7 +27,10 @@
     <button type="submit">upload</button>
     </form>
 
-    <button class="btn-default"><a href="{% url 'checkRecords' 1 %}">check records</a></button>
+    <p></p>
+    <button class="btn-default"><a href="{% url 'upload' %}">Upload Your Photos & See Results</a> </button>
+    <p></p>
+    <button class="btn-default"><a href="{% url 'checkRecords' 1 %}">Check & Manage Your Records</a></button>
 
 {% else %}
     <p>you haven't logged in
