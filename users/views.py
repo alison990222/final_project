@@ -86,8 +86,8 @@ def save_pic(request):
 				urlretrieve(url, path + pic_name)
 				picture = path + pic_name
 			# input should be limited to .jpg(hopefully)
-			#res = func(picture)
-			pic_content = models.Pic.objects.create(timestamp=timestamp, username=username, picture=picture)#, res=res)
+			# res = func(picture)
+				pic_content = models.Pic.objects.create(timestamp=timestamp, username=username, picture=picture)#, res=res)
 				#pic_name = str(timestamp) + ".JPG"
 				#urlretrieve(url, path + pic_name)
 				#picture = path + pic_name
@@ -223,7 +223,7 @@ def delete(request, pic_id):
 	try:
 		# 传入False参数使得ImageField不保存文件，将其一起删除
 		Pic.objects.get(pk=pic_id).delete(False)
-		return
+		return check_records(request, 1)
 
 	except ObjectDoesNotExist as e:
 		return django.http.HttpResponse(e)
