@@ -9,6 +9,7 @@ from .forms import PicForm  # 上传图片的图表
 from .models import Pic  # 保存上传图片相关信息的模型
 from final_project.settings import MEDIA_ROOT
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage, InvalidPage
+import datetime
 
 import django.http
 import json
@@ -83,6 +84,7 @@ def save_pic(request):
 		return render(request, 'index.html')
 
 
+# todo：执行前检查用户身份，用request.session
 def show_pic(request, pic_id):
 	try:
 		pic = Pic.objects.get(pk=pic_id)
@@ -106,10 +108,10 @@ def check_records(request, page):
 		if record.username == user.username:
 			record_list.append({
 				'user': record.username,
-				'record id': record.id,
-				'input picture': str(record.picture),
-				'output picture': str(record.res),
-				'upload time': record.timestamp
+				'record_id': record.id,
+				'input_picture': str(record.picture),
+				'output_picture': str(record.res),
+				'upload_time': record.timestamp
 			})
 
 	# 规定每页10条数据，进行分割
@@ -129,5 +131,45 @@ def check_records(request, page):
 			return django.http.HttpResponse('找不到页面内容')
 
 		template_view = 'users/check_record.html'
+
 		return render(request, template_view, {'records': records})
 
+
+# 按照日期范围查询记录
+def search(request, page):
+	start_date_str = request.GET.get('start_date')
+	end_date_str = request.GET.get('end_date')
+	start_date = datetime.datetime.strptime(start_date_str, '%Y-%m-%d').date()
+	end_date = datetime.datetime.strptime(end_date_str, '%Y-%m-%d').date()
+
+	record_list = []
+	user = request.user
+	for record in Pic.objects.all():
+		if record.username == user.username:
+			update_date = datetime.datetime.strptime(record.timestamp, '%Y-%m-%d %H:%M:%S').date()
+			if start_date <= update_date <= end_date:
+				record_list.append({
+					'user': record.username,
+					'record_id': record.id,
+					'input_picture': str(record.picture),
+					'output_picture': str(record.res),
+					'upload_time': record.timestamp
+				})
+
+	# 规定每页10条数据，进行分割
+	paginator = Paginator(record_list, 10)
+
+	try:
+		records = paginator.page(page)
+	except PageNotAnInteger:
+		# 如果请求的页数不是整数，返回第一页
+		records = paginator.page(1)
+	except EmptyPage:
+		# 如果页数不在合法范围内，返回结果最后一页
+		records = paginator.page(paginator.num_pages)
+	except InvalidPage:
+		# 如果请求的页数不存在，重定向页面
+		return django.http.HttpResponse('找不到页面内容')
+
+	return render(request, 'users/check_record.html',
+	              {'records': records, 'searched': True, 'start_date': start_date_str, 'end_date': end_date_str})

@@ -10,14 +10,66 @@
 </head>
 <body>
     <button class="btn-default"><a href="{% url 'index' %}">back to main page</a></button>
+    <p></p>
 
-    <table class="text-center">
+    <!-- 支持按上传日期范围查询记录 -->
+    <p>本站支持按照片上传日期范围进行查询。如果没有日期控件，请按YYYY-MM-DD格式输入：</p>
+    {% if not searched %}
+        <form method="get" action="{% url 'search' 1 %}">
+            {% csrf_token %}
+            <label>开始日期：
+                <input type="date" name="start_date" placeholder="请输入开始日期" required
+                       pattern="^(?:(?!0000)[0-9]{4}-(?:(?:0[1-9]|1[0-2])-(?:0[1-9]|1[0-9]|2[0-8])|(?:0[13-9]|1[0-2])-(?:29|30)|(?:0[13578]|1[02])-31)|(?:[0-9]{2}(?:0[48]|[2468][048]|[13579][26])|(?:0[48]|[2468][048]|[13579][26])00)-02-29)$">
+            </label>
+            <label>结束日期：
+                <input type="date" name="end_date" placeholder="请输入结束日期" required
+                       pattern="^(?:(?!0000)[0-9]{4}-(?:(?:0[1-9]|1[0-2])-(?:0[1-9]|1[0-9]|2[0-8])|(?:0[13-9]|1[0-2])-(?:29|30)|(?:0[13578]|1[02])-31)|(?:[0-9]{2}(?:0[48]|[2468][048]|[13579][26])|(?:0[48]|[2468][048]|[13579][26])00)-02-29)$">
+            </label>
+            <button type="submit">点击搜索</button>
+        </form>
+    {% else %}
+        <form method="get" action="{% url 'search' 1 %}">
+            {% csrf_token %}
+            <label>开始日期：
+                <input type="date" name="start_date" placeholder="请输入开始日期" required
+                       pattern="^(?:(?!0000)[0-9]{4}-(?:(?:0[1-9]|1[0-2])-(?:0[1-9]|1[0-9]|2[0-8])|(?:0[13-9]|1[0-2])-(?:29|30)|(?:0[13578]|1[02])-31)|(?:[0-9]{2}(?:0[48]|[2468][048]|[13579][26])|(?:0[48]|[2468][048]|[13579][26])00)-02-29)$"
+                       value={{ start_date }}>
+            </label>
+            <label>结束日期：
+                <input type="date" name="end_date" placeholder="请输入结束日期" required
+                       pattern="^(?:(?!0000)[0-9]{4}-(?:(?:0[1-9]|1[0-2])-(?:0[1-9]|1[0-9]|2[0-8])|(?:0[13-9]|1[0-2])-(?:29|30)|(?:0[13578]|1[02])-31)|(?:[0-9]{2}(?:0[48]|[2468][048]|[13579][26])|(?:0[48]|[2468][048]|[13579][26])00)-02-29)$"
+                       value={{ end_date }}>
+            </label>
+            <button type="submit">点击搜索</button>
+        </form>
+    {% endif %}
+
+    <p></p>
+    <table class="text-center" border="1" >
         {% for record in records %}
             <tr>
-            <td>{{ record }}</td>
+            <td>
+                user: {{ record.user }}
+            </td>
+            <td>
+                record id: {{ record.record_id }}
+            </td>
+            <td>
+                input picture: {{ record.input_picture }}
+            </td>
+            <td>
+                output picture: {{ record.output_picture }}
+            </td>
+            <td>
+                upload time: {{ record.upload_time }}
+            </td>
+            <td>
+                <button><a href="{% url 'image' record.record_id %}">点击查看上传图片内容</a></button>
+            </td>
             </tr>
         {% endfor %}
     </table>
+    <p></p>
 
     <!-- 实现页面切换功能，每一页显示十条历史记录 -->
     <!-- 使用了bootstrap渲染界面 -->
@@ -25,7 +77,11 @@
         <span class="step-links">
             {% if records.has_previous %}
                 <button>
-                <a class="active" href="{% url 'checkRecords' records.previous_page_number %}">上一页</a>
+                {% if searched %}
+                    <a class="active" href="{% url 'search' records.previous_page_number %}?&start_date={{ start_date }}&end_date={{ end_date }}">上一页结果</a>
+                {% else %}
+                    <a class="active" href="{% url 'checkRecords' records.previous_page_number %}">上一页</a>
+                {% endif %}
                 </button>
             {% endif %}
 
@@ -35,44 +91,15 @@
 
             {% if records.has_next %}
                 <button>
-                <a class="active" href="{% url 'checkRecords' records.next_page_number %}">下一页</a>
+                {% if searched %}
+                    <a class="active" href="{% url 'search' records.next_page_number %}?&start_date={{ start_date }}&end_date={{ end_date }}">下一页结果</a>
+                {% else %}
+                    <a class="active" href="{% url 'checkRecords' records.next_page_number %}">下一页</a>
+                {% endif %}
                 </button>
             {% endif %}
         </span>
     </div>
-
-    <!--
-<script>
-    let page = 1;
-    document.getElementById('page').textContent = page;
-
-    function fetch() {
-        let xmlHttp = new XMLHttpRequest();
-        xmlHttp.onreadystatechange = function () {
-            if (this.readyState === 4 && this.status === 200) {
-                document.getElementById('main_table').innerHTML = xmlHttp.responseText;
-                // getInfo(this);
-            }
-        };
-        xmlHttp.open("GET", `check_records/${page}`, true);
-        xmlHttp.send();
-    }
-    
-    function getInfo(xml) {
-        const xmlDoc = xml.responseXML;
-        let table="<tr><th>Artist</th><th>Title</th></tr>";
-        const x = xmlDoc.getElementsByTagName("CD");
-        for (let i = 0; i < x.length; i++) {
-            table += "<tr><td>" +
-            x[i].getElementsByTagName("ARTIST")[0].childNodes[0].nodeValue +
-            "</td><td>" +
-            x[i].getElementsByTagName("TITLE")[0].childNodes[0].nodeValue +
-            "</td></tr>";
-        }
-        document.getElementById("demo").innerHTML = table;
-    }
-</script>
-    -->
 
 </body>
 </html>
