@@ -15,8 +15,8 @@ from final_project.settings import MEDIA_ROOT
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage, InvalidPage
 from django.core.exceptions import ObjectDoesNotExist
 import datetime
-
-from users.Object_Detection import func
+# from users.Object_Detection import func
+from users.Classification import classify_image
 
 import django.http
 import json
@@ -95,7 +95,26 @@ def show_pic(request, pic_id):
 		with open(pic_path, 'rb') as image:
 			image_data = image.read()
 		# 使用文件流，从服务器后台发送图片（二进制数据）到网页
-		return django.http.HttpResponse(image_data, content_type='image/png')  # 暂定都是png格式文件
+		return django.http.HttpResponse(image_data)
+	except Exception as e:
+		print(e)
+		return django.http.HttpResponse(str(e))
+
+
+# 展示id对应图片的处理结果
+def show_result(request, pic_id):
+	try:
+		pic = Pic.objects.get(pk=pic_id)
+		res_path = os.path.join('media/', str(pic.res))
+
+		while not os.path.exists(res_path):
+			# 每隔1秒检查一次输出文件是否存在，若已输出则返回相应结果
+			time.sleep(1)
+
+		with open(res_path, 'rb') as image:
+			image_data = image.read()
+		# 使用文件流，从服务器后台发送处理结果（二进制数据）到网页
+		return django.http.HttpResponse(image_data)
 	except Exception as e:
 		print(e)
 		return django.http.HttpResponse(str(e))
@@ -183,37 +202,45 @@ def upload_and_view(request):
 		form = PicForm(request.POST, request.FILES)
 
 		if form.is_valid():
-			pic = form.cleaned_data["picture"]
-			url = form.cleaned_data["url"]
+			try:
+				pic = form.cleaned_data["picture"]
+				url = form.cleaned_data["url"]
 
-			current_user = request.user
-			username = current_user.username
+				current_user = request.user
+				username = current_user.username
 
-			time_now = int(time.time())
-			time_local = time.localtime(time_now)
-			timestamp = time.strftime("%Y-%m-%d %H:%M:%S", time_local)
-			nowTime = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
-			context = {}
-			form = PicForm
-			context['form'] = form
+				time_now = int(time.time())
+				time_local = time.localtime(time_now)
+				timestamp = time.strftime("%Y-%m-%d %H:%M:%S", time_local)
+				context = {}
+				form = PicForm
+				context['form'] = form
 
-			if pic:
-				picture = pic
+				if pic:
+					picture = pic
+
+				elif url:
+					path = "./media/pictures/"
+					pic_name = str(timestamp) + ".jpg"
+					urlretrieve(url, path + pic_name)
+					picture = "pictures/" + pic_name
+
+				# input should be limited to .jpg(hopefully)
+
+				pic_content = models.Pic.objects.create(timestamp=timestamp, username=username, picture=picture)
 				target_path = "media/pictures/" + picture.name
+				# res = func(target_path)
+				# pic_content.res = res
+				pic_content.save()
+				context['pic_id'] = pic_content.id
+				context['classification'] = classify_image(picture)
+				context['uploaded'] = True
 
-			elif url:
-				path = "./media/pictures/"
-				pic_name = str(nowTime) + ".jpg"
-				urlretrieve(url, path + pic_name)
-				picture = "pictures/" + pic_name
-				target_path = "media/pictures/" + pic_name
+			except:
+				return render(request, 'index.html')  # 如果没有上传照片，返回首页
 
-			# input should be limited to .jpg(hopefully)
-
-			pic_content = models.Pic.objects.create(timestamp=timestamp, username=username, picture=picture)
-			res = func(target_path)
-			pic_content.res = res
-			pic_content.save()
+		else:
+			return render(request, 'index.html')    # 如果没有上传照片，返回首页
 
 	else:
 		context = {}
@@ -233,8 +260,8 @@ def delete(request, pic_id):
 
 
 def delete_batch(request):
-	start_date_str = request.GET.get('start_date')
-	end_date_str = request.GET.get('end_date')
+	start_date_str = request.POST.get('start_date')
+	end_date_str = request.POST.get('end_date')
 	start_date = datetime.datetime.strptime(start_date_str, '%Y-%m-%d').date()
 	end_date = datetime.datetime.strptime(end_date_str, '%Y-%m-%d').date()
 
@@ -245,4 +272,4 @@ def delete_batch(request):
 			if start_date <= update_date <= end_date:
 				record.delete()
 
-	return check_records(request, 1)
+	return django.http.HttpResponse('批量删除成功！')
