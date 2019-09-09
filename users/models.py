@@ -52,7 +52,7 @@ def pic_delete(sender, instance, **kwargs):
 	instance.res.delete(False)
 
 
-'''
+
 def create_modules(module_defs):
 	"""
 	Constructs module list of layer blocks from module configuration in module_defs
@@ -385,4 +385,4 @@ class Darknet(nn.Module):
 				conv_layer.weight.data.cpu().numpy().tofile(fp)
 
 		fp.close()
-'''
+

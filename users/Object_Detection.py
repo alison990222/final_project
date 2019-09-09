@@ -1,4 +1,4 @@
-'''
+
 import numpy as np
 import time, datetime, random
 import torch
@@ -89,4 +89,4 @@ def func(target_path):
 	img_path = img_path.split(".")[0]
 	plt.savefig(img_path+"_res.jpg", bbox_inches='tight', pad_inches=0.0)
 	return (img_path+"_res.jpg")
-'''
+
