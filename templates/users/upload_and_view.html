@@ -45,7 +45,7 @@
         </script>
         <p></p>
 
-        <!-- todo: 完成模型处理后检查返回结果 -->
+        <!-- 完成模型处理后检查返回结果 -->
         <p id="processing">图像处理中……</p>
         <img src="" alt="Image Processing..." id="process_pic">
         <script>
@@ -58,7 +58,7 @@
         xmlHttp.onreadystatechange=function () {
             if (xmlHttp.readyState === 4 && xmlHttp.status === 200) {
                 // 从服务器以二进制流返回上传的图片结果
-                document.getElementById('upload_pic').src = URL.createObjectURL(xmlHttp.response)
+                document.getElementById('process_pic').src = URL.createObjectURL(xmlHttp.response)
             }
         }
         </script>

@@ -15,7 +15,7 @@ from final_project.settings import MEDIA_ROOT
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage, InvalidPage
 from django.core.exceptions import ObjectDoesNotExist
 import datetime
-# from users.Object_Detection import func
+from users.Object_Detection import func
 from users.Classification import classify_image
 
 import django.http
@@ -95,7 +95,7 @@ def show_pic(request, pic_id):
 		with open(pic_path, 'rb') as image:
 			image_data = image.read()
 		# 使用文件流，从服务器后台发送图片（二进制数据）到网页
-		return django.http.HttpResponse(image_data)
+		return django.http.HttpResponse(image_data, content_type='image/png')
 	except Exception as e:
 		print(e)
 		return django.http.HttpResponse(str(e))
@@ -114,7 +114,7 @@ def show_result(request, pic_id):
 		with open(res_path, 'rb') as image:
 			image_data = image.read()
 		# 使用文件流，从服务器后台发送处理结果（二进制数据）到网页
-		return django.http.HttpResponse(image_data)
+		return django.http.HttpResponse(image_data, content_type='image/png')
 	except Exception as e:
 		print(e)
 		return django.http.HttpResponse(str(e))
@@ -229,8 +229,8 @@ def upload_and_view(request):
 
 				pic_content = models.Pic.objects.create(timestamp=timestamp, username=username, picture=picture)
 				target_path = "media/pictures/" + picture.name
-				# res = func(target_path)
-				# pic_content.res = res
+				res = func(target_path)
+				pic_content.res = res
 				pic_content.save()
 				context['pic_id'] = pic_content.id
 				context['classification'] = classify_image(picture)

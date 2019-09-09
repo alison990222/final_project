@@ -1,4 +1,3 @@
-
 import numpy as np
 import time, datetime, random
 import torch
@@ -11,9 +10,10 @@ from PIL import Image
 
 from users.models import Darknet
 from .utils import utils
-config_path='users/config/yolov3.cfg'
-weights_path='users/config/yolov3.weights'
-class_path='users/config/coco.names'
+
+config_path = 'users/config/yolov3.cfg'
+weights_path = 'users/config/yolov3.weights'
+class_path = 'users/config/coco.names'
 img_size = 416
 conf_thres = 0.8
 nms_thres = 0.4
@@ -27,27 +27,30 @@ classes = utils.load_classes(class_path)
 
 Tensor = torch.FloatTensor
 
+
 def detect_image(img):
-    # scale and pad image
-    ratio = min(img_size/img.size[0], img_size/img.size[1])
-    imw = round(img.size[0] * ratio)
-    imh = round(img.size[1] * ratio)
-    img_transforms = transforms.Compose([ transforms.Resize((imh, imw)),
-         transforms.Pad((max(int((imh-imw)/2),0), max(int((imw-imh)/2),0), max(int((imh-imw)/2),0), max(int((imw-imh)/2),0)),
-                        (128,128,128)),
-         transforms.ToTensor(),
-         ])
-    # convert image to Tensor
-    image_tensor = img_transforms(img).float()
+	# scale and pad image
+	ratio = min(img_size / img.size[0], img_size / img.size[1])
+	imw = round(img.size[0] * ratio)
+	imh = round(img.size[1] * ratio)
+	img_transforms = transforms.Compose([transforms.Resize((imh, imw)),
+	                                     transforms.Pad((max(int((imh - imw) / 2), 0), max(int((imw - imh) / 2), 0),
+	                                                     max(int((imh - imw) / 2), 0), max(int((imw - imh) / 2), 0)),
+	                                                    (128, 128, 128)),
+	                                     transforms.ToTensor(),
+	                                     ])
+	# convert image to Tensor
+	image_tensor = img_transforms(img).float()
 
-    image_tensor = image_tensor.unsqueeze_(0)
+	image_tensor = image_tensor.unsqueeze_(0)
 
-    input_img = Variable(image_tensor.type(Tensor))
-    # run inference on the model and get detections
-    with torch.no_grad():
-        detections = model(input_img)
-        detections = utils.non_max_suppression(detections, 80, conf_thres, nms_thres)
-    return detections[0]
+	input_img = Variable(image_tensor.type(Tensor))
+	# run inference on the model and get detections
+	with torch.no_grad():
+		detections = model(input_img)
+		detections = utils.non_max_suppression(detections, 80, conf_thres, nms_thres)
+	return detections[0]
+
 
 def func(target_path):
 	# load image and get detections
@@ -61,7 +64,7 @@ def func(target_path):
 
 	img = np.array(img)
 	plt.figure()
-	fig, ax = plt.subplots(1, figsize=(12,9))
+	fig, ax = plt.subplots(1, figsize=(12, 9))
 	ax.imshow(img)
 
 	pad_x = max(img.shape[0] - img.shape[1], 0) * (img_size / max(img.shape))
@@ -83,10 +86,9 @@ def func(target_path):
 			bbox = patches.Rectangle((x1, y1), box_w, box_h, linewidth=2, edgecolor=color, facecolor='none')
 			ax.add_patch(bbox)
 			plt.text(x1, y1, s=classes[int(cls_pred)], color='white', verticalalignment='top',
-					bbox={'color': color, 'pad': 0})
+			         bbox={'color': color, 'pad': 0})
 	plt.axis('off')
 	# save image
 	img_path = img_path.split(".")[0]
-	plt.savefig(img_path+"_res.jpg", bbox_inches='tight', pad_inches=0.0)
-	return (img_path+"_res.jpg")
-
+	plt.savefig(img_path + "_res.jpg", bbox_inches='tight', pad_inches=0.0)
+	return img_path + "_res.jpg"
