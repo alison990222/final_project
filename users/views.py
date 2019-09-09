@@ -15,7 +15,7 @@ from final_project.settings import MEDIA_ROOT
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage, InvalidPage
 from django.core.exceptions import ObjectDoesNotExist
 import datetime
-from users.Object_Detection import func
+# from users.Object_Detection import func
 
 import django.http
 import json
@@ -247,8 +247,8 @@ def upload_and_view(request):
 
 			pic_content = models.Pic.objects.create(timestamp=timestamp, username=username, picture=picture)
 			target_path = "media/pictures/" + picture.name
-			res = func(target_path)
-			pic_content.res = res
+			# res = func(target_path)
+			# pic_content.res = res
 			pic_content.save()
 
 	else:
@@ -260,8 +260,8 @@ def upload_and_view(request):
 
 def delete(request, pic_id):
 	try:
-		# 传入False参数使得ImageField不保存文件，将其一起删除
-		Pic.objects.get(pk=pic_id).delete(False)
+		# 不保存关联的图像文件，将其一起删除
+		Pic.objects.get(id=pic_id).delete()
 		return check_records(request, 1)
 
 	except ObjectDoesNotExist as e:
