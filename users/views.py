@@ -5,7 +5,6 @@ from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render, redirect, render_to_response
 from django.template import RequestContext
 
-
 from .forms import RegisterForm, UserForm
 from users import models
 from django.shortcuts import render, redirect
@@ -106,21 +105,25 @@ def show_pic(request, pic_id):
 
 # 展示id对应图片的处理结果
 def show_result(request, pic_id):
-	try:
-		pic = Pic.objects.get(pk=pic_id)
-		res_path = str(pic.res)
+	if request.session.get("has_login", False):
+		try:
+			pic = Pic.objects.get(pk=pic_id)
+			res_path = os.path.join("media/" + str(pic.res))
+			print(res_path)
+			while not os.path.exists(res_path):
+				# 每隔0.1秒检查一次输出文件是否存在，若已输出则返回相应结果
+				time.sleep(0.1)
+			print('test2')
+			with open(res_path, 'rb') as image:
+				image_data = image.read()
+			# 使用文件流，从服务器后台发送处理结果（二进制数据）到网页
+			return django.http.HttpResponse(image_data, content_type='image/png')
+		except Exception as e:
 
-		while not os.path.exists(res_path):
-			# 每隔0.1秒检查一次输出文件是否存在，若已输出则返回相应结果
-			time.sleep(0.1)
-
-		with open(res_path, 'rb') as image:
-			image_data = image.read()
-		# 使用文件流，从服务器后台发送处理结果（二进制数据）到网页
-		return django.http.HttpResponse(image_data, content_type='image/png')
-	except Exception as e:
-		print(e)
-		return django.http.HttpResponse(str(e))
+			print(e)
+			return django.http.HttpResponse(str(e))
+	else:
+		print("please login with your own session")
 
 
 # 使用AJAX动态返回表单
@@ -161,7 +164,6 @@ def check_records(request, page):
 		print("please login with your own session")
 
 
-
 # 按照日期范围查询记录
 def search(request, page):
 	if request.session.get("has_login", False):
@@ -200,7 +202,7 @@ def search(request, page):
 			return django.http.HttpResponse('找不到页面内容')
 
 		return render(request, 'users/check_record.html',
-					  {'records': records, 'searched': True, 'start_date': start_date_str, 'end_date': end_date_str})
+		              {'records': records, 'searched': True, 'start_date': start_date_str, 'end_date': end_date_str})
 	else:
 		print("please login with your own session")
 
@@ -211,47 +213,53 @@ def upload_and_view(request):
 		if request.method == "POST":
 			form = PicForm(request.POST, request.FILES)
 
-		if form.is_valid():
-			try:
-				pic = form.cleaned_data["picture"]
-				url = form.cleaned_data["url"]
+			if form.is_valid():
+				try:
+					pic = form.cleaned_data["picture"]
+					url = form.cleaned_data["url"]
 
-				current_user = request.user
-				username = current_user.username
+					current_user = request.user
+					username = current_user.username
 
-				time_now = int(time.time())
-				time_local = time.localtime(time_now)
-				timestamp = time.strftime("%Y-%m-%d %H:%M:%S", time_local)
-				context = {}
-				form = PicForm
-				context['form'] = form
+					time_now = int(time.time())
+					time_local = time.localtime(time_now)
+					timestamp = time.strftime("%Y-%m-%d %H:%M:%S", time_local)
+					nowTime = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+					context = {}
+					form = PicForm
+					context['form'] = form
 
-				if pic:
-					picture = pic
+					if pic:
+						picture = pic
+						print(type(picture))
+						target_path = "media/pictures/" + picture.name
+						context['classification'] = classify_image(picture)
 
-				elif url:
-					path = "./media/pictures/"
-					pic_name = str(timestamp) + ".jpg"
-					urlretrieve(url, path + pic_name)
-					picture = "pictures/" + pic_name
+					elif url:
+						path = "./media/pictures/"
+						pic_name = str(nowTime) + ".jpg"
+						urlretrieve(url, path + pic_name)
+						# pic_content = Pic.objects.create(timestamp=timestamp, username=username)
+						picture = "pictures/" + pic_name
+						target_path = "media/pictures/" + pic_name
+						context['classification'] = classify_image("media/" + picture)
+					# print(picture)
 
-				# input should be limited to .jpg(hopefully)
+					pic_content = models.Pic.objects.create(timestamp=timestamp, username=username, picture=picture)
 
-				pic_content = models.Pic.objects.create(timestamp=timestamp, username=username, picture=picture)
-				target_path = "media/pictures/" + picture.name
-				res = func(target_path)
-				pic_content.res = res
-				pic_content.save()
-				context['pic_id'] = pic_content.id
-				context['classification'] = classify_image(picture)
-				context['uploaded'] = True
+					res = func(target_path)
+					res = "pictures/" + res.split("/")[-1]
+					pic_content.res = res
+					pic_content.save()
+					context['pic_id'] = pic_content.id
+					context['uploaded'] = True
 
-			except Exception as e:
-				print(e)
-				return render(request, 'index.html')  # 如果没有上传照片，返回首页
+				except Exception as e:
+					print(e)
+					return render(request, 'index.html')  # 如果没有上传照片，返回首页
 
 			else:
-				return render(request, 'index.html')    # 如果没有上传照片，返回首页
+				return render(request, 'index.html')  # 如果没有上传照片，返回首页
 
 		else:
 			context = {}
@@ -260,7 +268,6 @@ def upload_and_view(request):
 	else:
 		print("please login with your own session")
 	return render(request, 'users/upload_and_view.html', context)
-
 
 
 def delete(request, pic_id):
@@ -292,4 +299,3 @@ def delete_batch(request):
 	else:
 		print("please login with your own session")
 	return django.http.HttpResponse('批量删除成功！')
-
