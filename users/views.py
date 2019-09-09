@@ -266,3 +266,19 @@ def delete(request, pic_id):
 
 	except ObjectDoesNotExist as e:
 		return django.http.HttpResponse(e)
+
+
+def delete_batch(request):
+	start_date_str = request.GET.get('start_date')
+	end_date_str = request.GET.get('end_date')
+	start_date = datetime.datetime.strptime(start_date_str, '%Y-%m-%d').date()
+	end_date = datetime.datetime.strptime(end_date_str, '%Y-%m-%d').date()
+
+	user = request.user
+	for record in Pic.objects.all():
+		if record.username == user.username:
+			update_date = datetime.datetime.strptime(record.timestamp, '%Y-%m-%d %H:%M:%S').date()
+			if start_date <= update_date <= end_date:
+				record.delete()
+
+	return check_records(request, 1)
