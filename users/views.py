@@ -73,7 +73,7 @@ def login(request):
 			password = userform.cleaned_data['password']
 			# 获取的表单数据与数据库进行比较
 			user = auth.authenticate(username=username, password=password)
-			request.session["user_id"] = user.id
+			request.session["has_login"] = True
 			if user:
 				auth.login(request, user)
 				response = HttpResponseRedirect('/')
@@ -88,17 +88,20 @@ def login(request):
 
 # todo：执行前检查用户身份，用request.session
 def show_pic(request, pic_id):
-	try:
-		pic = Pic.objects.get(pk=pic_id)
-		pic_path = os.path.join('media/', str(pic.picture))
+	if request.session.get("has_login", False):
+		try:
+			pic = Pic.objects.get(pk=pic_id)
+			pic_path = os.path.join('media/', str(pic.picture))
 
-		with open(pic_path, 'rb') as image:
-			image_data = image.read()
-		# 使用文件流，从服务器后台发送图片（二进制数据）到网页
-		return django.http.HttpResponse(image_data, content_type='image/png')
-	except Exception as e:
-		print(e)
-		return django.http.HttpResponse(str(e))
+			with open(pic_path, 'rb') as image:
+				image_data = image.read()
+			# 使用文件流，从服务器后台发送图片（二进制数据）到网页
+			return django.http.HttpResponse(image_data, content_type='image/png')
+		except Exception as e:
+			print(e)
+			return django.http.HttpResponse(str(e))
+	else:
+		print("please login with your own session")
 
 
 # 展示id对应图片的处理结果
@@ -121,24 +124,69 @@ def show_result(request, pic_id):
 
 
 # 使用AJAX动态返回表单
-# todo：执行前检查用户身份，用request.session
 def check_records(request, page):
-	record_list = []
-	user = request.user
-	for record in Pic.objects.all():
-		if record.username == user.username:
-			record_list.append({
-				'user': record.username,
-				'record_id': record.id,
-				'input_picture': str(record.picture),
-				'output_picture': str(record.res),
-				'upload_time': record.timestamp
-			})
+	if request.session.get("has_login", False):
+		record_list = []
+		user = request.user
+		for record in Pic.objects.all():
+			if record.username == user.username:
+				record_list.append({
+					'user': record.username,
+					'record_id': record.id,
+					'input_picture': str(record.picture),
+					'output_picture': str(record.res),
+					'upload_time': record.timestamp
+				})
 
-	# 规定每页10条数据，进行分割
-	paginator = Paginator(record_list, 10)
+		# 规定每页10条数据，进行分割
+		paginator = Paginator(record_list, 10)
 
-	if request.method == 'GET':
+		if request.method == 'GET':
+			try:
+				records = paginator.page(page)
+			except PageNotAnInteger:
+				# 如果请求的页数不是整数，返回第一页
+				records = paginator.page(1)
+			except EmptyPage:
+				# 如果页数不在合法范围内，返回结果最后一页
+				records = paginator.page(paginator.num_pages)
+			except InvalidPage:
+				# 如果请求的页数不存在，重定向页面
+				return django.http.HttpResponse('找不到页面内容')
+
+			template_view = 'users/check_record.html'
+
+			return render(request, template_view, {'records': records})
+	else:
+		print("please login with your own session")
+
+
+
+# 按照日期范围查询记录
+def search(request, page):
+	if request.session.get("has_login", False):
+		start_date_str = request.GET.get('start_date')
+		end_date_str = request.GET.get('end_date')
+		start_date = datetime.datetime.strptime(start_date_str, '%Y-%m-%d').date()
+		end_date = datetime.datetime.strptime(end_date_str, '%Y-%m-%d').date()
+
+		record_list = []
+		user = request.user
+		for record in Pic.objects.all():
+			if record.username == user.username:
+				update_date = datetime.datetime.strptime(record.timestamp, '%Y-%m-%d %H:%M:%S').date()
+				if start_date <= update_date <= end_date:
+					record_list.append({
+						'user': record.username,
+						'record_id': record.id,
+						'input_picture': str(record.picture),
+						'output_picture': str(record.res),
+						'upload_time': record.timestamp
+					})
+
+		# 规定每页10条数据，进行分割
+		paginator = Paginator(record_list, 10)
+
 		try:
 			records = paginator.page(page)
 		except PageNotAnInteger:
@@ -151,55 +199,17 @@ def check_records(request, page):
 			# 如果请求的页数不存在，重定向页面
 			return django.http.HttpResponse('找不到页面内容')
 
-		template_view = 'users/check_record.html'
-
-		return render(request, template_view, {'records': records})
-
-
-# 按照日期范围查询记录
-def search(request, page):
-	start_date_str = request.GET.get('start_date')
-	end_date_str = request.GET.get('end_date')
-	start_date = datetime.datetime.strptime(start_date_str, '%Y-%m-%d').date()
-	end_date = datetime.datetime.strptime(end_date_str, '%Y-%m-%d').date()
-
-	record_list = []
-	user = request.user
-	for record in Pic.objects.all():
-		if record.username == user.username:
-			update_date = datetime.datetime.strptime(record.timestamp, '%Y-%m-%d %H:%M:%S').date()
-			if start_date <= update_date <= end_date:
-				record_list.append({
-					'user': record.username,
-					'record_id': record.id,
-					'input_picture': str(record.picture),
-					'output_picture': str(record.res),
-					'upload_time': record.timestamp
-				})
-
-	# 规定每页10条数据，进行分割
-	paginator = Paginator(record_list, 10)
-
-	try:
-		records = paginator.page(page)
-	except PageNotAnInteger:
-		# 如果请求的页数不是整数，返回第一页
-		records = paginator.page(1)
-	except EmptyPage:
-		# 如果页数不在合法范围内，返回结果最后一页
-		records = paginator.page(paginator.num_pages)
-	except InvalidPage:
-		# 如果请求的页数不存在，重定向页面
-		return django.http.HttpResponse('找不到页面内容')
-
-	return render(request, 'users/check_record.html',
-	              {'records': records, 'searched': True, 'start_date': start_date_str, 'end_date': end_date_str})
+		return render(request, 'users/check_record.html',
+					  {'records': records, 'searched': True, 'start_date': start_date_str, 'end_date': end_date_str})
+	else:
+		print("please login with your own session")
 
 
 # empty file and url will make it buggy
 def upload_and_view(request):
-	if request.method == "POST":
-		form = PicForm(request.POST, request.FILES)
+	if request.session.get("has_login", False):
+		if request.method == "POST":
+			form = PicForm(request.POST, request.FILES)
 
 		if form.is_valid():
 			try:
@@ -240,38 +250,46 @@ def upload_and_view(request):
 				print(e)
 				return render(request, 'index.html')  # 如果没有上传照片，返回首页
 
-		else:
-			return render(request, 'index.html')    # 如果没有上传照片，返回首页
+			else:
+				return render(request, 'index.html')    # 如果没有上传照片，返回首页
 
+		else:
+			context = {}
+			form = PicForm
+			context['form'] = form
 	else:
-		context = {}
-		form = PicForm
-		context['form'] = form
+		print("please login with your own session")
 	return render(request, 'users/upload_and_view.html', context)
 
 
-def delete(request, pic_id):
-	try:
-		# 不保存关联的图像文件，将其一起删除
-		Pic.objects.get(id=pic_id).delete()
-		return check_records(request, 1)
 
-	except ObjectDoesNotExist as e:
-		return django.http.HttpResponse(e)
+def delete(request, pic_id):
+	if request.session.get("has_login", False):
+		try:
+			# 不保存关联的图像文件，将其一起删除
+			Pic.objects.get(id=pic_id).delete()
+			return check_records(request, 1)
+
+		except ObjectDoesNotExist as e:
+			return django.http.HttpResponse(e)
+	else:
+		print("please login with your own session")
 
 
 def delete_batch(request):
-	start_date_str = request.POST.get('start_date')
-	end_date_str = request.POST.get('end_date')
-	start_date = datetime.datetime.strptime(start_date_str, '%Y-%m-%d').date()
-	end_date = datetime.datetime.strptime(end_date_str, '%Y-%m-%d').date()
+	if request.session.get("has_login", False):
+		start_date_str = request.POST.get('start_date')
+		end_date_str = request.POST.get('end_date')
+		start_date = datetime.datetime.strptime(start_date_str, '%Y-%m-%d').date()
+		end_date = datetime.datetime.strptime(end_date_str, '%Y-%m-%d').date()
 
-	user = request.user
-	for record in Pic.objects.all():
-		if record.username == user.username:
-			update_date = datetime.datetime.strptime(record.timestamp, '%Y-%m-%d %H:%M:%S').date()
-			if start_date <= update_date <= end_date:
-				record.delete()
-
+		user = request.user
+		for record in Pic.objects.all():
+			if record.username == user.username:
+				update_date = datetime.datetime.strptime(record.timestamp, '%Y-%m-%d %H:%M:%S').date()
+				if start_date <= update_date <= end_date:
+					record.delete()
+	else:
+		print("please login with your own session")
 	return django.http.HttpResponse('批量删除成功！')
 

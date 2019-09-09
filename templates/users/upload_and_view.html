@@ -15,8 +15,8 @@
 
     <p>建议上传.jpg格式图片，否则可能出现错误</p>
     {# uploading pics #}
+    <p>建议上传.jpg格式图片，否则可能出现错误</p >
     <form enctype="multipart/form-data" action="{% url "upload" %}"  method="POST">
-{#    action="{% url "save_pic" %}"#}
     {% csrf_token %}
     {% for field in form %}
         {{ field.label }}
