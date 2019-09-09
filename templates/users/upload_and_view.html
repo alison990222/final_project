@@ -24,6 +24,27 @@
     <br><br>
     <button type="submit">upload</button>
     </form>
+    <p></p>
+
+    {% if uploaded %}
+        <p>如下是你上传的图片：</p>
+        <img src="" alt="uploaded image" id="upload_pic">
+
+        <script>
+        // 使用ajax实时预览上传照片
+        let xmlHttp = new XMLHttpRequest();
+        xmlHttp.open('GET', '{% url 'image' pic_id %}', true);     // 异步获取图片
+        xmlHttp.responseType = "blob";  // 要求二进制流返回以显示图片
+        xmlHttp.send();
+
+        xmlHttp.onreadystatechange=function () {
+            if (xmlHttp.readyState === 4 && xmlHttp.status === 200) {
+                // 从服务器以二进制流返回上传的图片结果
+                document.getElementById('upload_pic').src = URL.createObjectURL(xmlHttp.response)
+            }
+        }
+        </script>
+    {% endif %}
 
 </body>
 </html>

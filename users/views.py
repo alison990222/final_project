@@ -221,35 +221,44 @@ def upload_and_view(request):
 		form = PicForm(request.POST, request.FILES)
 
 		if form.is_valid():
-			pic = form.cleaned_data["picture"]
-			url = form.cleaned_data["url"]
+			try:
+				pic = form.cleaned_data["picture"]
+				url = form.cleaned_data["url"]
 
-			current_user = request.user
-			username = current_user.username
+				current_user = request.user
+				username = current_user.username
 
-			time_now = int(time.time())
-			time_local = time.localtime(time_now)
-			timestamp = time.strftime("%Y-%m-%d %H:%M:%S", time_local)
-			context = {}
-			form = PicForm
-			context['form'] = form
+				time_now = int(time.time())
+				time_local = time.localtime(time_now)
+				timestamp = time.strftime("%Y-%m-%d %H:%M:%S", time_local)
+				context = {}
+				form = PicForm
+				context['form'] = form
 
-			if pic:
-				picture = pic
+				if pic:
+					picture = pic
 
-			elif url:
-				path = "./media/pictures/"
-				pic_name = str(timestamp) + ".jpg"
-				urlretrieve(url, path + pic_name)
-				picture = "pictures/" + pic_name
+				elif url:
+					path = "./media/pictures/"
+					pic_name = str(timestamp) + ".jpg"
+					urlretrieve(url, path + pic_name)
+					picture = "pictures/" + pic_name
 
-			# input should be limited to .jpg(hopefully)
+				# input should be limited to .jpg(hopefully)
 
-			pic_content = models.Pic.objects.create(timestamp=timestamp, username=username, picture=picture)
-			target_path = "media/pictures/" + picture.name
-			# res = func(target_path)
-			# pic_content.res = res
-			pic_content.save()
+				pic_content = models.Pic.objects.create(timestamp=timestamp, username=username, picture=picture)
+				target_path = "media/pictures/" + picture.name
+				# res = func(target_path)
+				# pic_content.res = res
+				pic_content.save()
+				context['pic_id'] = pic_content.id
+				context['uploaded'] = True
+
+			except:
+				return render(request, 'index.html')  # 如果没有上传照片，返回首页
+
+		else:
+			return render(request, 'index.html')    # 如果没有上传照片，返回首页
 
 	else:
 		context = {}
