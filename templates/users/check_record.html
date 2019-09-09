@@ -47,7 +47,7 @@
 
     <!-- 批量删除功能：按照片上传的日期范围进行选择删除 -->
     <p>本站同时支持按照片上传日期范围进行<b style="color: #ff0000">批量删除</b>。如果没有日期控件，请按YYYY-MM-DD格式输入：</p>
-    <form method="get" action="{% url 'delete_batch' %}">
+    <form method="post" action="{% url 'delete_batch' %}" target="_blank">
         {% csrf_token %}
         <label>开始日期：
             <input type="date" name="start_date" placeholder="请输入开始日期" required
@@ -81,7 +81,7 @@
                 upload time: {{ record.upload_time }}
             </td>
             <td>
-                <button><a href="{% url 'image' record.record_id %}">点击查看上传图片内容</a></button>
+                <button><a href="{% url 'image' record.record_id %}" target="_blank">点击查看上传图片内容</a></button>
             </td>
             <td>
                 <button><a href="{% url 'delete' record.record_id %}">删除这条记录及相应图片</a></button>

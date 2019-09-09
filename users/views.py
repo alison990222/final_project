@@ -269,8 +269,8 @@ def delete(request, pic_id):
 
 
 def delete_batch(request):
-	start_date_str = request.GET.get('start_date')
-	end_date_str = request.GET.get('end_date')
+	start_date_str = request.POST.get('start_date')
+	end_date_str = request.POST.get('end_date')
 	start_date = datetime.datetime.strptime(start_date_str, '%Y-%m-%d').date()
 	end_date = datetime.datetime.strptime(end_date_str, '%Y-%m-%d').date()
 
@@ -281,4 +281,4 @@ def delete_batch(request):
 			if start_date <= update_date <= end_date:
 				record.delete()
 
-	return check_records(request, 1)
+	return django.http.HttpResponse('批量删除成功！')
