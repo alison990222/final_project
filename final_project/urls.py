@@ -28,6 +28,7 @@ urlpatterns = [
 	# url(r'^static/(?P<path>.*)', serve, {"document_root": STATIC_ROOT}),
 	url(r'^media/(?P<path>.*)', serve, {"document_root": MEDIA_ROOT}),
 	url(r'^show_pic/(\d+)', views.show_pic, name='image'),
+	url(r'^show_result/(\d+)', views.show_result, name='image_result'),
 	url(r'^check_records/(\d+)', views.check_records, name='checkRecords'),
 	url(r'^search/(\d+)', views.search, name='search'),
 	url(r'^upload/', views.upload_and_view, name='upload'),
