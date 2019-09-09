@@ -50,15 +50,17 @@
         <img src="" alt="Image Processing..." id="process_pic">
         <script>
         // 使用ajax实时预览上传照片
-        let xmlHttp = new XMLHttpRequest();
-        xmlHttp.open('GET', '{% url 'image_result' pic_id %}', true);     // 异步获取处理结果
-        xmlHttp.responseType = "blob";  // 要求二进制流返回以显示图片
-        xmlHttp.send();
+        let xml = new XMLHttpRequest();
+        console.log('request for results');
+        xml.open('GET', '{% url 'image_result' pic_id %}', true);     // 异步获取处理结果
+        xml.responseType = "blob";  // 要求二进制流返回以显示图片
+        xml.send();
 
-        xmlHttp.onreadystatechange=function () {
-            if (xmlHttp.readyState === 4 && xmlHttp.status === 200) {
+        xml.onreadystatechange=function () {
+            if (xml.readyState === 4 && xml.status === 200) {
                 // 从服务器以二进制流返回上传的图片结果
-                document.getElementById('process_pic').src = URL.createObjectURL(xmlHttp.response)
+                document.getElementById('processing').innerText = 'Detection处理结果如下：';
+                document.getElementById('process_pic').src = URL.createObjectURL(xml.response);
             }
         }
         </script>

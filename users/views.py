@@ -103,14 +103,15 @@ def show_pic(request, pic_id):
 
 # 展示id对应图片的处理结果
 def show_result(request, pic_id):
+	print('enter get result')
 	try:
 		pic = Pic.objects.get(pk=pic_id)
 		res_path = os.path.join('media/', str(pic.res))
-
+		print(res_path)
 		while not os.path.exists(res_path):
-			# 每隔1秒检查一次输出文件是否存在，若已输出则返回相应结果
-			time.sleep(1)
-
+			# 每隔0.1秒检查一次输出文件是否存在，若已输出则返回相应结果
+			time.sleep(0.1)
+		print('test2')
 		with open(res_path, 'rb') as image:
 			image_data = image.read()
 		# 使用文件流，从服务器后台发送处理结果（二进制数据）到网页
