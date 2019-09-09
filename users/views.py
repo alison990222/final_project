@@ -192,6 +192,7 @@ def upload_and_view(request):
 			time_now = int(time.time())
 			time_local = time.localtime(time_now)
 			timestamp = time.strftime("%Y-%m-%d %H:%M:%S", time_local)
+			nowTime = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
 			context = {}
 			form = PicForm
 			context['form'] = form
@@ -202,7 +203,7 @@ def upload_and_view(request):
 
 			elif url:
 				path = "./media/pictures/"
-				pic_name = str(timestamp) + ".jpg"
+				pic_name = str(nowTime) + ".jpg"
 				urlretrieve(url, path + pic_name)
 				picture = "pictures/" + pic_name
 				target_path = "media/pictures/" + pic_name
