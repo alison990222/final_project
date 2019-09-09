@@ -15,6 +15,7 @@ from final_project.settings import MEDIA_ROOT
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage, InvalidPage
 from django.core.exceptions import ObjectDoesNotExist
 import datetime
+from users.Object_Detection import func
 
 import django.http
 import json
@@ -58,7 +59,6 @@ def index(request):
 	return render(request, 'index.html', context)
 
 
-# empty file and url will make it buggy
 def save_pic(request):
 	if request.method == "POST":
 		form = PicForm(request.POST, request.FILES)
@@ -241,18 +241,21 @@ def upload_and_view(request):
 				path = "./media/pictures/"
 				pic_name = str(timestamp) + ".jpg"
 				urlretrieve(url, path + pic_name)
-				picture = path + pic_name
+				picture = "pictures/" + pic_name
+
 			# input should be limited to .jpg(hopefully)
-			#res = func(picture)
-			pic_content = models.Pic.objects.create(timestamp=timestamp, username=username, picture=picture)#, res=res)
+
+			pic_content = models.Pic.objects.create(timestamp=timestamp, username=username, picture=picture)
+			target_path = "media/pictures/" + picture.name
+			res = func(target_path)
+			pic_content.res = res
+			pic_content.save()
 
 	else:
 		context = {}
 		form = PicForm
 		context['form'] = form
 	return render(request, 'users/upload_and_view.html', context)
-
-	#return render(request, 'users/upload_and_view.html')
 
 
 def delete(request, pic_id):
