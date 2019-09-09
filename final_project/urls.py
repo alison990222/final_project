@@ -31,5 +31,6 @@ urlpatterns = [
 	url(r'^check_records/(\d+)', views.check_records, name='checkRecords'),
 	url(r'^search/(\d+)', views.search, name='search'),
 	url(r'^upload/', views.upload_and_view, name='upload'),
-	url(r'^check_records/(\d+)', views.delete, name='delete'),
+	url(r'^delete/(\d+)', views.delete, name='delete'),
+	url(r'^delete_batch/', views.delete_batch, name="delete_batch"),
 ]

@@ -15,6 +15,7 @@ from final_project.settings import MEDIA_ROOT
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage, InvalidPage
 from django.core.exceptions import ObjectDoesNotExist
 import datetime
+
 from users.Object_Detection import func
 
 import django.http
@@ -222,9 +223,25 @@ def upload_and_view(request):
 
 def delete(request, pic_id):
 	try:
-		# 传入False参数使得ImageField不保存文件，将其一起删除
-		Pic.objects.get(pk=pic_id).delete(False)
+		# 不保存关联的图像文件，将其一起删除
+		Pic.objects.get(id=pic_id).delete()
 		return check_records(request, 1)
 
 	except ObjectDoesNotExist as e:
 		return django.http.HttpResponse(e)
+
+
+def delete_batch(request):
+	start_date_str = request.GET.get('start_date')
+	end_date_str = request.GET.get('end_date')
+	start_date = datetime.datetime.strptime(start_date_str, '%Y-%m-%d').date()
+	end_date = datetime.datetime.strptime(end_date_str, '%Y-%m-%d').date()
+
+	user = request.user
+	for record in Pic.objects.all():
+		if record.username == user.username:
+			update_date = datetime.datetime.strptime(record.timestamp, '%Y-%m-%d %H:%M:%S').date()
+			if start_date <= update_date <= end_date:
+				record.delete()
+
+	return check_records(request, 1)

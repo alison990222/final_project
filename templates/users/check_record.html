@@ -44,6 +44,23 @@
         </form>
     {% endif %}
 
+
+    <!-- 批量删除功能：按照片上传的日期范围进行选择删除 -->
+    <p>本站同时支持按照片上传日期范围进行<b style="color: #ff0000">批量删除</b>。如果没有日期控件，请按YYYY-MM-DD格式输入：</p>
+    <form method="get" action="{% url 'delete_batch' %}">
+        {% csrf_token %}
+        <label>开始日期：
+            <input type="date" name="start_date" placeholder="请输入开始日期" required
+                   pattern="^(?:(?!0000)[0-9]{4}-(?:(?:0[1-9]|1[0-2])-(?:0[1-9]|1[0-9]|2[0-8])|(?:0[13-9]|1[0-2])-(?:29|30)|(?:0[13578]|1[02])-31)|(?:[0-9]{2}(?:0[48]|[2468][048]|[13579][26])|(?:0[48]|[2468][048]|[13579][26])00)-02-29)$">
+        </label>
+        <label>结束日期：
+            <input type="date" name="end_date" placeholder="请输入结束日期" required
+                   pattern="^(?:(?!0000)[0-9]{4}-(?:(?:0[1-9]|1[0-2])-(?:0[1-9]|1[0-9]|2[0-8])|(?:0[13-9]|1[0-2])-(?:29|30)|(?:0[13578]|1[02])-31)|(?:[0-9]{2}(?:0[48]|[2468][048]|[13579][26])|(?:0[48]|[2468][048]|[13579][26])00)-02-29)$">
+        </label>
+        <button type="submit" class="btn btn-danger"><b>点击批量删除</b></button>
+    </form>
+
+
     <p></p>
     <table class="text-center" border="1" >
         {% for record in records %}
@@ -103,6 +120,7 @@
             {% endif %}
         </span>
     </div>
+
 
 </body>
 </html>
